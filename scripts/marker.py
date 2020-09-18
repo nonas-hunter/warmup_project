@@ -2,35 +2,46 @@
 
 """ publisher node that writes a sphere to rviz every 10 seconds"""
 from visualization_msgs.msg import Marker
-from geometry_msgs.msg import PointStamped
-
-from std_msgs.msg import Header
-from geometry_msgs.msg import Point
 import rospy
 
 class SphereMarker:
-    def __init__(self, name):
-        rospy.init_node(name) # inittialize ourselves with roscore
-        
-        self.header = Header(stamp=rospy.Time.now(), frame_id = "odom")
+    def __init__(self, frame_id, x_coord, y_coord):
+        rospy.init_node('make_sphere') # inittialize ourselves with roscore
+        self.publisher = rospy.Publisher('/sphere_marker', Marker, queue_size=10)
 
-        # Replace with visualization_msgs/Marker
-        self.point = Point(1.0, 2.0, 0.0)
-        self.point_stamped = PointStamped(header = self.header, point = self.point)
-        
-        self.publisher = rospy.Publisher('/sphere_marker', PointStamped, queue_size=10)
+        self.marker = Marker()
+        self.marker.header.frame_id = frame_id
+        self.marker.header.stamp = rospy.Time.now()
+        self.marker.ns = "my_namespace"
+        self.marker.id = 0
+        self.marker.type = Marker.SPHERE
+        self.marker.action = Marker.ADD
+        self.marker.pose.position.x = x_coord
+        self.marker.pose.position.y = y_coord
+        self.marker.pose.position.z = 1
+        self.marker.pose.orientation.x = 0.0
+        self.marker.pose.orientation.y = 0.0
+        self.marker.pose.orientation.z = 0.0
+        self.marker.pose.orientation.w = 1.0
+        self.marker.scale.x = 1
+        self.marker.scale.y = 0.1
+        self.marker.scale.z = 0.1
+        self.marker.color.a = 1.0 # Don't forget to set the alpha!
+        self.marker.color.r = 0.0
+        self.marker.color.g = 1.0
+        self.marker.color.b = 0.0
 
         self.run()
 
     def run(self):
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
-            self.point_stamped.header.stamp = rospy.Time.now() # update the time stamp
-            self.publisher.publish(self.point_stamped)
+            
             rate.sleep()
 
+
 if __name__ == "__main__":
-    sphere = SphereMarker("sphere1")    
+    sphere = SphereMarker("odom", 1, 2)    
 
 
 
