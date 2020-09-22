@@ -49,7 +49,6 @@ class DriveSquare:
         if(0.95<= self.x_coord <= 1.05 and self.x_dist == 0):
             self.publisher.publish(Twist(angular=Vector3(z=self.angular_velocity)))
             while(True):
-                self.odom_process(self.message)
                 if(90 <= self.z_orientation <= 180):
                     self.x_dist = 1
                     break
@@ -57,7 +56,6 @@ class DriveSquare:
         if(0.95<= self.y_coord <= 1.05 and self.y_dist == 0):
             self.publisher.publish(Twist(angular=Vector3(z=self.angular_velocity)))
             while(True):
-                self.odom_process(self.message)
                 if(-180 <= self.z_orientation <= -90):
                     self.y_dist = 1
                     break
@@ -65,7 +63,6 @@ class DriveSquare:
         if(-0.05 <= self.x_coord <= 0.02 and self.x_dist == 1):
             self.publisher.publish(Twist(angular=Vector3(z=self.angular_velocity)))
             while(True):
-                self.odom_process(self.message)
                 if(-90 <= self.z_orientation <= 0):
                     self.x_dist = 2
                     break
@@ -73,7 +70,6 @@ class DriveSquare:
         if(-0.05 <= self.y_coord <= 0.02 and self.y_dist == 1):
             self.publisher.publish(Twist(angular=Vector3(z=self.angular_velocity)))
             while(True):
-                self.odom_process(self.message)
                 if(0<= self.z_orientation <= 90):
                     self.x_dist = 2
                     break
