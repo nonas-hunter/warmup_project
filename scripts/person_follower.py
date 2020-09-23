@@ -10,23 +10,16 @@ class PersonFollower:
         self.subscriber = rospy.Subscriber('/scan', LaserScan, self.analyze_scan) 
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.scan = []
-        self.min_cm = 0
-        self.max_cm = 0
-        self.cm = 0
         self.p0 = 180
         self.target_dist = 1
         self.CM_GAIN = 0.4
         self.APPROACH_GAIN = 0.0816326531
-        rospy.sleep(0.5)
+        #rospy.sleep(0.5)
         self.run()
 
     def analyze_scan(self, msg):
         self.scan = msg
-
-        
        
-        
-
     def run(self):
         while not rospy.is_shutdown():
             if(-0.05  <= self.find_error_cm() <= 0.05):
@@ -57,8 +50,11 @@ class PersonFollower:
         return (self.find_error_approach()*self.APPROACH_GAIN) + 0.3
         """
     def find_cm(self):
+        min_cm = 0
+        max_cm = 0
+        cm = 0 
         for i in range(len(self.scan.ranges)-1):
-            if(self.min_cm == 0 and self.scan .ranges[i] == math.inf):
+            if(min_cm == 0 and self.scan .ranges[i] == math.inf):
                 self.min_cm = i
             if(self.min_cm != 0 and self.scan.ranges[i+1] != math.inf):
                 self.max_cm = i
