@@ -14,7 +14,7 @@ class PersonFollower:
         self.target_dist = 1
         self.CM_GAIN = 0.4
         self.APPROACH_GAIN = 0.0816326531
-        #rospy.sleep(0.5)
+        rospy.sleep(0.5)
         self.run()
 
     def analyze_scan(self, msg):
@@ -55,12 +55,13 @@ class PersonFollower:
         cm = 0 
         for i in range(len(self.scan.ranges)-1):
             if(min_cm == 0 and self.scan .ranges[i] == math.inf):
-                self.min_cm = i
-            if(self.min_cm != 0 and self.scan.ranges[i+1] != math.inf):
-                self.max_cm = i
-            self.cm = (self.max_cm - self.min_cm)/2
-        print("cm: " + str(self.cm))
-        return self.cm
+                min_cm = i
+            if(min_cm != 0 and self.scan.ranges[i+1] != math.inf):
+                max_cm = i
+            cm = (max_cm - min_cm)/2
+        print("cm: " + str(cm))
+        print(self.scan.ranges)
+        return cm
 
     
 
