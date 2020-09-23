@@ -2,6 +2,7 @@
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Point, Pose, PoseWithCovariance, Twist, Vector3, Quaternion
 import rospy
+import math
 
 class WallFollower:
     def __init__(self):
@@ -25,6 +26,7 @@ class WallFollower:
         print("Index of minimum distance: " + str(self.min_index))
         print("Error: " + str(self.find_error()["mag"]))
         print("Controller output: " + str(self.controller_output()))
+        
 
     def run(self):
         while not rospy.is_shutdown():
