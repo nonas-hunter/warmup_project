@@ -9,24 +9,51 @@ class PersonFollower:
         rospy.init_node('person_follower')
         self.subscriber = rospy.Subscriber('/scan', LaserScan, self.analyze_scan) 
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
-        self.scan = []
+        
+        self.follow_object = {"cm":0, "dist":0}
+
         self.p0 = 180
         self.target_dist = 1
-        self.CM_GAIN = 0.4
-        self.APPROACH_GAIN = 0.0816326531
-        rospy.sleep(0.5)
-        self.run()
+        self.CM_GAIN = 2
+        self.APPROACH_GAIN = 5
+        
+        
+        
 
     def analyze_scan(self, msg):
-        self.scan = msg
+    
+        scan = msg.ranges
+        self.follow_object["dist"] = min(scan)
+        min_index = scan.index(self.follow_object["dist"])
+        self.follow_object["cm"] = self.find_cm(scan, min_index)
+        print("running")
+    def find_cm(self, scan, index_original):
+        step_lower = 0
+        step_upper = 0
+        while scan[self.loop_around(index_original + step_lower)] != math.inf:
+            step_lower -= 1
+            
+        while scan[self.loop_around(index_original + step_upper)] != math.inf:
+            step_upper += 1
+
+        average = (step_lower + step_upper) / 2
+
+        center_mass = self.loop_around(index_original + average)
+
+        print("cm: "+ str(center_mass))
+
+        return center_mass
        
-    def run(self):
-        while not rospy.is_shutdown():
-            if(-0.05  <= self.find_error_cm() <= 0.05):
-                self.publisher.publish(Twist(angular=Vector3(z=self.controller_output_cm())))
+
+    def loop_around(self, num):
+        return abs(num % 360) 
+
+
+################################################
 
     def find_error_cm(self):
-        error = (self.find_cm() - self.p0)/self.p0
+        cm = self.follow_object["cm"]
+        error = (self.loop_around((cm + 180))- 180) / 180
         print("Error: " + str(error))
         return error
         """
@@ -36,12 +63,9 @@ class PersonFollower:
         else:
             return (self.scan.ranges[0] - self.target_dist)/self.target_dist
         """
-    def controller_output_cm(self):
-        error = self.find_error_cm()
-        if(error > 0):
-            output = (error*self.CM_GAIN) + 0.3
-        else:
-            output = (error*self.CM_GAIN) - 0.3
+    def controller_output_cm(self, error):
+        #error = self.find_error_cm()
+        output = error * self.CM_GAIN
         print("Controller output: " + str(output))
         return output
 
@@ -49,22 +73,17 @@ class PersonFollower:
     def controller_output_target(self):
         return (self.find_error_approach()*self.APPROACH_GAIN) + 0.3
         """
-    def find_cm(self):
-        min_cm = 0
-        max_cm = 0
-        cm = 0 
-        for i in range(len(self.scan.ranges)-1):
-            if(min_cm == 0 and self.scan .ranges[i] == math.inf):
-                min_cm = i
-            if(min_cm != 0 and self.scan.ranges[i+1] != math.inf):
-                max_cm = i
-            cm = (max_cm - min_cm)/2
-        print("cm: " + str(cm))
-        print(self.scan.ranges)
-        return cm
 
-    
+    def run(self):
+        r = rospy.Rate(5)
+        while not rospy.is_shutdown():
+
+            error = self.find_error_cm()
+            self.publisher.publish(Twist(angular=Vector3(z=self.controller_output_cm(error))))
+            r.sleep()
+      
 
 if __name__ == "__main__":
     person_follower = PersonFollower()
-    rospy.spin()
+    person_follower.run()
+    
