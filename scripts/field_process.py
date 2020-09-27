@@ -12,13 +12,13 @@ class PotentialField:
         self.inf = 100
         
     
-    def add_point(self, x_object, y_object, state= True, radius=0.1, spread=2):   
+    def add_point(self, x_object, y_object, state=False, radius=0.1, spread=3):   
         self.points.append({"x":x_object, "y":y_object, "radius":radius, "type":state, "spread":spread}) 
 
     def calc_gradient(self, x_agent, y_agent, point):
         distance, angle = self.calc_distance_angle(x_agent, y_agent, point["x"], point["y"])
         x, y = (0, 0)
-        if point["type"] == PotentialField.GOAL:
+        if point["type"] == True:
             if distance < point["radius"]:
                 x, y = (0, 0)
             elif point["radius"] <= distance <= point["radius"] + point["spread"]:
@@ -28,7 +28,7 @@ class PotentialField:
                 x = self.alpha * point["spread"] * math.cos(angle)
                 y = self.alpha * point["spread"]* math.sin(angle)
                 
-        elif point["type"] == PotentialField.OBSTACLE:
+        elif point["type"] == False:
             if distance < point["radius"] :
                 x = -self.sign(math.cos(angle)) * self.inf
                 y = -self.sign(math.sin(angle)) * self.inf
@@ -42,12 +42,20 @@ class PotentialField:
     def calc_output(self, x_agent, y_agent):
         delta_x = 0
         delta_y = 0
+        max_delta_x = 0
+        max_delta_y = 0
         for point in self.points:
             x, y = self.calc_gradient(x_agent, y_agent, point)
+            max_x, max_y = self.calc_gradient(99999, 99999, point)
             delta_x += x
             delta_y += y
-        velocity = math.sqrt((delta_x**2) + (delta_y**2))
+            max_delta_x += max_x
+            max_delta_y += max_y
+            # print("x: " + str(x))
+            # print("y: " + str(y))
+        velocity = math.sqrt((delta_x**2) + (delta_y**2)) / abs(math.sqrt((max_delta_x**2) + (max_delta_y**2)))
         angle = math.atan2(delta_y, delta_x)
+        
         return (velocity, angle)
             
     def calc_distance_angle(self, x_agent, y_agent, x_object, y_object):
@@ -57,7 +65,8 @@ class PotentialField:
     
     def sign(self, num):
         return num / abs(num)
-
+    def clear(self):
+        self.points = []
 
 if __name__ == "__main__":
     test = PotentialField()
