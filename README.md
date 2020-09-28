@@ -35,7 +35,7 @@ For this task, we wrote a simple teleoperation node that allows the user to cont
   
 As you can see, this is a very bare bones implementation, much simpler than the provided [teleop_twist_keyboard](http://wiki.ros.org/teleop_twist_keyboard) . We mostly wanted to get this done with so we could focus on the more complicated behaviors later in the project. 
 
->Key Takeaway: Non-clunky robot control is hard. If we had more time, we would have implemented a combined linear-angular velocity feature. This would have allowed us to arc for a turn, instead of stop motion all together in order to turn to the desire angle. Also good to know that an ESTOP function that take a keyboard imput can be implemented if desired (probably more import when testing on real robots), instead of simply cancelling the running node in terminal. This can cause all sorts of issues, most notably that the robot will keep acting on its last received cmd_vel. If we had time, we would have implemented this feature in our final Finite State Machine. 
+>Key Takeaway: Non-clunky robot control is hard. If we had more time, we would have implemented a combined linear-angular velocity feature. This would have allowed us to arc for a turn, instead of stop motion all together in order to turn to the desired angle. It is also good to know that an ESTOP function that takes a keyboard input can be implemented if desired (probably more import when testing on real robots), instead of simply cancelling the running node in terminal. This can cause all sorts of issues, most notably that the robot will keep acting on its last received cmd_vel. If we had time, we would have implemented this feature in our final Finite State Machine. 
 
 
 ## Driving in a Square
@@ -46,9 +46,9 @@ The two seemingly best ways to instruct our robot to drive in 1m x 1m square wer
 
 The majority of time spent on this behavior trying to figure out how to interpret the data we were given by our odometry subscriber. Our lives were made significanly easier by the discovery of the [transformations.py](http://docs.ros.org/jade/api/tf/html/python/transformations.html) library, which allowed us to convert from the given quaternions to simple Euler angles, given a specifed axis order.
 
-After that, it was simply a matter or converting the Euler angles into a convient span of angles. Unfortunely, we kept the default span, which ranged from -PI to PI, instead of shifting over to a 0-2PI span. This caused headaches later on and eventually lead us to hard code the movements into the robot which could have easily been avoided.
+After that, it was simply a matter of converting the Euler angles into a convient span of angles. Unfortunely, we kept the default span, which ranged from -PI to PI, instead of shifting over to a 0-2PI span. This caused headaches later on and eventually lead us to hard code the movements into the robot which could have easily been avoided.
 
-    Key Takeaway: While it may seem easier to hardcode actions into the NEATO it is always better to try and generalize the code which makes it much more robust and allows for code reuse if a similar action needs to be completed in a different behavior. 
+>Key Takeaway: While it may seem easier to hardcode actions into the NEATO it is always better to try and generalize the code. This makes the code much more robust and allows for code reuse if a similar action needs to be implemented in a different behavior. 
 
 ## Following a Wall
 
@@ -58,9 +58,9 @@ Wall following is a simple, but important reactive behavior to implement. Much o
 
 ![wall](figs/wall.jpg)
 
-Out implementation takes the shortest distance of a given set of LaserScan data as the angle it wants to orient itself 90 degrees from. The robot will always want to turn the shortest distance, so the direction it travels parallel to the wall in dependent on its initial orientation. If it's right side is wall-facing, it will travel that way, and vice versa. 
+Out implementation takes the shortest distance of a given set of LaserScan data as the angle it wants to orient itself 90 degrees from. The robot will always want to turn the shortest distance, so the direction it travels parallel to the wall is dependent on its initial orientation. If it's right side is wall-facing, it will travel that way, and vice versa. 
 
->Key Takeaway: Learning to switch to a different approach when a particular technique doesn't seem to be working is hard! We believe our logic was sound, but we must have been missing something in the Python implementation. However once we switch to a method that was easier to visualize regarding the laserscan data, the behavior worked flawlessly. In addition, it turned out that by restructuring our code into a getter | setting protocol, we made our code more robust and reusable.
+>Key Takeaway: Incorporate all LaserScan data if possible! We initially only used two scans that formed a right triangle, which did not perform well when turning. 
 
 ## Follow a Person
 
@@ -75,10 +75,7 @@ At a high-level, this behavior functions very similary to our wall follower. Ins
 >Note: this behavior can only follow a person that exists in an otherwise featureless plane. The next step would be some sort of RANSAC algorithm to identify objects we want to follow (cylinders) and those we do not (walls)
 
 
->Key Takeways: Helper functions for tricky trig problems!
-
-
->Key Takeaway: We spent awhile trying to turn our error parameters so that when it was within a certain *small* value, the robot would stop moving. This led to host of problems, most notably making debugging significantly harder, becasue for each bug-fix test, you must also test your error margins haven't changed. Instead, it is highly advised that roboti movement be mathematically linked to error, instead of just checking within a certain error bound. 
+>Key Takeaway: We spent awhile trying to turn our error parameters so that when it was within a certain *small* value, the robot would stop moving. This led to host of problems, most notably making debugging significantly harder, becasue for each bug-fix test, you must also test your error margins haven't changed. Instead, it is highly advised that roboti movement be mathematically linked to error, instead of just checking within a certain error bound. It was also very helpful to make a "loop around" function to transform our LIDAR data into a format was easier to manipulate the way we were thinking about the array algorithmically. 
  
 
 ## Avoid Obstacles
@@ -87,15 +84,15 @@ At a high-level, this behavior functions very similary to our wall follower. Ins
 
 Avoiding obstacles is one of the most important behaviors for any robot wishing to operate inside an environment with objects. Assuming most robots don't operate in the middle of a flat, featureless plane, it is safe to say that obstacle detection is a priority of robot operation.
 
-While most of our previous code was written in a single class, it proved easier to read and debug to have all of the "important" math inside a helper PotentialField class, which takes an array of LIDAR-detected points, turns them into sources or sinks, and outputs a single vector in the direction of intended travel. From there, it was simply a matter of finding the error between the current and desired orienation, writing a proportional control algorithm to properly scale our velocities. 
+While most of our previous code was written in a single class, it proved easier to read and debug to have all of the "important" math inside a helper PotentialField class, which takes an array of LIDAR-detected points, turns them into sources or sinks, and outputs a single vector in the direction of intended travel. From there, it was simply a matter of finding the error between the current and desired orienation, and writing a proportional control algorithm to properly scale our velocities. 
 
->Key Takeaway: rotation matrices are difficult to implement. Our largest code structure of the project by far, is much harder to keep track of. Stress the importance of documentation!
+>Key Takeaway: rotation matrices are difficult to implement. Our largest code structure of the project by far, is much harder to keep track of. By the time we got to debugging ROS instead of math, we couldn't remember what we had fixed before! Good documention of code, and especially the information pipeline would have saved many hours here. 
 
 ## Finite-State Controller Implementation
 
 <img src='./figs/finite_state_controller.gif'>
 
-We chose to our Square Driver behavior and our Person Follower behavior to implement for the Finite State Machine portion of this project. Since this was both our first exposure to FSM's in general, as well as the smach library, we thought we should implement behaviors where there was a clear distinction of sensor data that could transition between states.  In our case, that mean looking to see if anything had been detected by our LIDAR. If not, it would drive in a square, but if there are any non-infinity values detected by our scan Subscriber, we move to Person Follower State. 
+We chose to combine our Square Driver behavior and our Person Follower behavior to implement the Finite State Machine portion of this project. Since this was both our first exposure to FSM's in general, as well as the smach library, we thought we should implement behaviors where there was a clear distinction of sensor data that could transition between states.  In our case, that mean looking to see if anything had been detected by our LIDAR. If not, it would drive in a square, but if there are any non-infinity values detected by our scan Subscriber, we moved to Person Follower State. 
 
 We wanted to use [smach](http://wiki.ros.org/smach) library, because, while seemingly more complicated than passing functions around a Class, it seemed easily scalable, industry standard, and can run multiple state machines in paralell, which is a must for robots for complicated than a single differential drive system. 
 
