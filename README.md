@@ -40,6 +40,8 @@ As you can see, this is a very bare bones implementation, much simpler than the 
 
 ## Driving in a Square
 
+<img src='./figs/drive_square.gif'>
+
 The two seemingly best ways to instruct our robot to drive in 1m x 1m square were as follows: command a specified velocity for a given time, then turn 90 degrees, or to check encoder data and turn using odometry. We chose to write this behavior using odometry because learning to read odometry data is infinitely more useful in the long run than what is essentially hardcoding straight-aways and turns using time.
 
 The majority of time spent on this behavior trying to figure out how to interpret the data we were given by our odometry subscriber. Our lives were made significanly easier by the discovery of the [transformations.py](http://docs.ros.org/jade/api/tf/html/python/transformations.html) library, which allowed us to convert from the given quaternions to simple Euler angles, given a specifed axis order.
@@ -62,13 +64,13 @@ Out implementation takes the shortest distance of a given set of LaserScan data 
 
 ## Follow a Person
 
+<img src='./figs/person_follower.gif'>
+
 Following a person is another fundamental behavior for any reactive contronl robot. And indeed, out of all the routines made for the project, it is the most human-like. For isn't it human nature to seek companionship? To find another being with which we can share our lives?
 
 ![wall](figs/person.jpg)
 
 At a high-level, this behavior functions very similary to our wall follower. Instead of getting our Neato to orient itself 90 degrees relative to the object, this time we wanted to face it, approach it, and stop it at an arbitrary distance (we liked to call this user-specificied social anxiety). First, we identify the angle of the shortest distance received by the LIDAR scanner. Using that angle as our starting position, we sweep through the lidar data in both directions looking for the edges of the object. Once we've located both edges we are able to calculate the center of mass of the "person" the NEATO wants to follow. Now that the NEATO knows the center of mass of the object and roughly how far away it is, it tries to align itself with the center of mass and ensure it is a specified distance (1.5m) away from the object. These actions are acomplished using proportional control based on two error functions (linear error and angular error) which find the difference between the robots current position and its desired position. The values for our proportional controll were found experimentally however if we had more time we could like to explore we would have liked to explore using a PID loop to find the fastest way to approach the object. 
-
-![follow_person gif](figs/follow_person.gif)
 
 >Note: this behavior can only follow a person that exists in an otherwise featureless plane. The next step would be some sort of RANSAC algorithm to identify objects we want to follow (cylinders) and those we do not (walls)
 
@@ -81,15 +83,17 @@ At a high-level, this behavior functions very similary to our wall follower. Ins
 
 ## Avoid Obstacles
 
+<img src='./figs/obsticale_avoid.gif'>
+
 Avoiding obstacles is one of the most important behaviors for any robot wishing to operate inside an environment with objects. Assuming most robots don't operate in the middle of a flat, featureless plane, it is safe to say that obstacle detection is a priority of robot operation.
 
-While most of our previous code was written in a single class, it proved easier to read and debug to have all of the "important" math inside a helper PotentialField class, which takes an array of LIDAR-detected points, turns them into sources or sinks, and outputs a single vector in the direction of intended travel. 
-
-    From there, it was simply a matter of finding the error between the current and desired orienation, writing a proportional control algorithm to properly scale our velocities. 
+While most of our previous code was written in a single class, it proved easier to read and debug to have all of the "important" math inside a helper PotentialField class, which takes an array of LIDAR-detected points, turns them into sources or sinks, and outputs a single vector in the direction of intended travel. From there, it was simply a matter of finding the error between the current and desired orienation, writing a proportional control algorithm to properly scale our velocities. 
 
 >Key Takeaway: rotation matrices are difficult to implement. Our largest code structure of the project by far, is much harder to keep track of. Stress the importance of documentation!
 
 ## Finite-State Controller Implementation
+
+<img src='./figs/finite_state_controller.gif'>
 
 We chose to our Square Driver behavior and our Person Follower behavior to implement for the Finite State Machine portion of this project. Since this was both our first exposure to FSM's in general, as well as the smach library, we thought we should implement behaviors where there was a clear distinction of sensor data that could transition between states.  In our case, that mean looking to see if anything had been detected by our LIDAR. If not, it would drive in a square, but if there are any non-infinity values detected by our scan Subscriber, we move to Person Follower State. 
 
