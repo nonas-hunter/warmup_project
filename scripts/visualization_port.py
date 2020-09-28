@@ -28,5 +28,5 @@ marker.color.r = 0.0
 marker.color.g = 1.0
 marker.color.b = 0.0
 # only if using a MESH_RESOURCE marker type:
-marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae";
-vis_pub.publish( marker );
+marker.mesh_resource = "package://pr2_description/meshes/base_v0/base.dae"
+vis_pub.publish( marker )
