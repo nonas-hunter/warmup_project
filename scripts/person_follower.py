@@ -13,7 +13,7 @@ class PersonFollower:
         self.follow_object = {"cm":0, "dist":0}
 
         self.p0 = 180
-        self.target_dist = 3
+        self.target_dist = 1
         self.CM_GAIN = 2
         self.APPROACH_GAIN = 1
         

@@ -66,5 +66,12 @@ In order to get familiar with ROS, the rospy library, object oriented code struc
 
 ## Avoid Obstacles
 
+    Avoiding obstacles is one of the most important behaviors for any robot wishing to operate inside an environment with objects. Assuming most robots don't operate in the middle of a flat, featureless plane, it is safe to say that obstacle detection is a priority of robot operation.
+
+    Key Takeaway: rotation matrices are difficult to implement. Our largest code structure of the project by far, is much harder to keep track of. Stress the importance of documentation!
+
 ## Finite-State Controller Implementation
 
+    Fairly straightforware using the smach library. Wanted to use smach because it seems easily scalable, industry standard, and can run multiple machines in paralell, which is a much for robots for complicated than a single differential drive system. 
+
+    The only thing needed to be added was a helper function to tell when to switch states. Because one state operated without the need to track an object, and object tracking was inherent in the other behavior's function, it seemed like a good idea to have the state machine switch be whether or not the laser scan was receiving "real" data, i.e. real numbers. 

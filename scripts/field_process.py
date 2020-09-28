@@ -12,7 +12,7 @@ class PotentialField:
         self.inf = 100
         
     
-    def add_point(self, x_object, y_object, state=False, radius=0.1, spread=3):   
+    def add_point(self, x_object, y_object, state=True, radius=0.1, spread=3):   
         self.points.append({"x":x_object, "y":y_object, "radius":radius, "type":state, "spread":spread}) 
 
     def calc_gradient(self, x_agent, y_agent, point):
@@ -33,8 +33,8 @@ class PotentialField:
                 x = -self.sign(math.cos(angle)) * self.inf
                 y = -self.sign(math.sin(angle)) * self.inf
             elif point["radius"] <= distance <= point["radius"] + point["spread"]:
-                x = -self.beta * (point["spread"] + distance - point["radius"]) * math.cos(angle)
-                y = -self.beta * (point["spread"] + distance - point["radius"]) * math.sin(angle)
+                x = -self.beta * (point["spread"] + point["radius"] - distance) * math.cos(angle)
+                y = -self.beta * (point["spread"] + point["radius"] - distance) * math.sin(angle)
             elif distance > point["radius"] + point["spread"]:
                 x, y = (0, 0)
         return (x, y)
@@ -46,13 +46,18 @@ class PotentialField:
         max_delta_y = 0
         for point in self.points:
             x, y = self.calc_gradient(x_agent, y_agent, point)
-            max_x, max_y = self.calc_gradient(99999, 99999, point)
+            if point["type"] == True:
+                max_x, max_y = self.calc_gradient(99999, 99999, point)
+            elif point["type"] == False:
+                max_x, max_y = self.calc_gradient(point["x"], point["y"], point)
             delta_x += x
             delta_y += y
             max_delta_x += max_x
             max_delta_y += max_y
             # print("x: " + str(x))
             # print("y: " + str(y))
+        # print("x: " + str(delta_x))
+        # print("y: " + str(delta_y))
         velocity = math.sqrt((delta_x**2) + (delta_y**2)) / abs(math.sqrt((max_delta_x**2) + (max_delta_y**2)))
         angle = math.atan2(delta_y, delta_x)
         
@@ -64,6 +69,8 @@ class PotentialField:
         return (distance, angle)
     
     def sign(self, num):
+        if num == 0:
+            return 1
         return num / abs(num)
     def clear(self):
         self.points = []
