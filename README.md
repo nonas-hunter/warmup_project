@@ -50,7 +50,7 @@ After that, it was simply a matter or converting the Euler angles into a convien
 
 ## Following a Wall
 
-![help](https://imgur.com/a/WosXK7I.jpg)
+<img src='./figs/wall_follower.gif'>
 
 Wall following is a simple, but important reactive behavior to implement. Much of the later behaviors would be influenced by how we decided to tackle this problem. 
 
