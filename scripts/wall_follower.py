@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Point, Pose, PoseWithCovariance, Twist, Vector3, Quaternion
+from visualization_msgs.msg import Marker
 import rospy
 import math
 
@@ -14,10 +15,10 @@ class WallFollower:
         self.min_index = 1
         self.p0 = 0
         self.P_GAIN = 0.404494382 # found value based on expected min & max error (0.011, 1)
-
+        self.num = 0
         self.viz = rospy.Publisher('/sphere_marker', Marker, queue_size=10)
         self.marker = Marker()
-
+        rospy.sleep(5)
         self.run()
 
     def analyze_scan(self, msg):
@@ -38,9 +39,11 @@ class WallFollower:
                 self.publisher.publish(Twist(linear=Vector3(x=0.3)))
             else:
                 self.publisher.publish(Twist(angular=Vector3(z=self.controller_output())))
-
-            self.update("odom", 1, 2)
-            self.publisher.publish(self.marker)
+            for i in range(len(self.scan.ranges)-1):
+                x, y = self.scan_to_point_local(self.scan.ranges[i], i)
+                self.update("odom", x, y, self.num)
+                self.viz.publish(self.marker)
+                self.num +=1
 
     def find_error(self):
         # Identify which side of the NEATO the wall is on
@@ -70,11 +73,17 @@ class WallFollower:
         else:
             return error["sign"] * (((error["mag"] - (1/90)) * self.P_GAIN) + 0.3)
 
-    def update(self, frame_id, x_coord, y_coord):
+    def scan_to_point_local(self, dist, angle):
+        x = dist * math.cos(math.radians(angle))
+        y = dist * math.sin(math.radians(angle))
+
+        return x, y
+
+    def update(self, frame_id, x_coord, y_coord, num):
         self.marker.header.frame_id = frame_id
         self.marker.header.stamp = rospy.Time.now()
         self.marker.ns = "my_namespace"
-        self.marker.id = 0
+        self.marker.id = num
         self.marker.type = Marker.SPHERE
         self.marker.action = Marker.ADD
         self.marker.pose.position.x = x_coord

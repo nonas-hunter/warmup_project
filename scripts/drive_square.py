@@ -9,6 +9,10 @@ import math
 
 class DriveSquare:
     def __init__(self):
+        """
+        Initalize node, read odometry data, and publish
+        velocity commands to instruct neato to drive in a square.
+        """
         rospy.init_node('square')
         self.subscriber = rospy.Subscriber('/odom', Odometry, self.odom_process) 
         self.publisher = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
@@ -26,7 +30,14 @@ class DriveSquare:
         self.message = 0
         self.square_completed = False
         self.run()
+
     def odom_process(self, msg):
+        """
+        Caculate neato position in global coordinates using odom reference frame.
+
+        Args:
+            msg: odometry message from subscriber
+        """
         self.message = msg
         self.x = msg.pose.pose.orientation.x
         self.y = msg.pose.pose.orientation.y
@@ -42,10 +53,13 @@ class DriveSquare:
         print("Y position: " + str(self.y_coord))
         print("Roll: " + str(self.z_orientation))
 
-
-
-
     def check_square(self):
+        """
+        Check robot state (straight/turn) to ensure it is driving in a square.
+
+        If the robot is about to go outside a given bound, change its state to prevent that.
+        If the robot has completed its square it stops moving
+        """
         if(0.95<= self.x_coord <= 1.05 and self.x_dist == 0):
             self.publisher.publish(Twist(angular=Vector3(z=self.angular_velocity)))
             while(True):
